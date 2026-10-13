@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import dotenv from 'dotenv';
-import {relianceFlow,iciciFlow,royalFlow,universalFlow,nationalFlow,shriramFlow,magmaFlow,futureGeneraliFlow} from './Insurer Flow.spec.js';
+import {fillIfEmpty,iciciFlow,royalFlow,universalFlow,nationalFlow,shriramFlow,magmaFlow,futureGeneraliFlow} from './Insurer Flow.spec.js';
+import {relianceFlow} from './RELIANCE.spec.js';
 
 dotenv.config();
 
 test('Comprehensive', async ({ page }) => {
-    test.setTimeout(30000);
+    test.setTimeout(120000);
     let targetInsurer;
     let selectedQuote = null;
 
@@ -165,11 +166,7 @@ test('Comprehensive', async ({ page }) => {
 
                     for (let i = 0; i < count; i++) {
 
-                        const insurerName = (
-                            await quotes.nth(i)
-                                .locator('div.pcc-icon p')
-                                .innerText()
-                        ).trim().toUpperCase();
+                        const insurerName = (await quotes.nth(i).getByText(targetInsurer, { exact: true }).innerText()).trim().toUpperCase();
 
                         if (insurerName === targetInsurer) {
                             return true;

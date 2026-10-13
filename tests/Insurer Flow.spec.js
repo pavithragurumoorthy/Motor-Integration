@@ -4,89 +4,93 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-export async function relianceFlow(page, selectedQuote) {
+export async function fillIfEmpty(locator, value, envName) {
+    if (!value?.trim()) {
+        throw new Error(
+            `Missing or empty environment variable: ${envName}`
+        );
+    }
 
-    console.log('Starting RELIANCE flow');
+    await expect(locator).toBeVisible();
 
-    await selectedQuote
-        .getByRole('button', { name: /₹/ })
-        .click();
+    const currentValue = await locator.inputValue();
 
-    await test.step('KYC Details', async () => {
-
-    // KYC dialog
-    await expect(
-        page.getByRole('heading', {
-            name: 'Know Your Customer (KYC)'
-        })
-    ).toBeVisible();
-
-    // Select ID Type
-    await page
-        .getByRole('combobox', { name: /Id Type/ })
-        .click();
-
-    await page
-        .getByRole('option', {
-            name: process.env.ID_TYPE,
-            exact: true
-        })
-        .click();
-
-    // Re-locate dialog AFTER ID type selection
-    const kyc = page.getByRole('dialog');
-
-    // PAN Number
-    const panLabel = page.locator(
-        '//mat-dialog-container[@id="mat-dialog-1"]/descendant::span[text()="Pan Number"]'
-    );
-
-    await expect(panLabel).toBeVisible();
-    await panLabel.click();
-
-    // await expect(panNumber).toBeVisible({ timeout: 10000 });
-    await panNumber.fill(process.env.ID_NUMBER);
-
-    // Full Name
-    await kyc
-        .getByPlaceholder('Full Name')
-        .fill(process.env.CUSTOMER_NAME);
-
-    // Gender
-    await kyc
-        .getByRole('combobox', { name: 'Gender Gender' })
-        .click();
-
-    await page
-        .getByRole('option', {
-            name: process.env.GENDER,
-            exact: true
-        })
-        .click();
-
-    // DOB
-    await kyc
-        .getByPlaceholder('DOB (DD/MM/YYYY)')
-        .fill(process.env.DOB);
-
-    // Save
-    await kyc
-        .getByRole('button', { name: 'Save' })
-        .click();
-});
-
-    console.log('RELIANCE flow completed');
+    if (!currentValue.trim()) {
+        await locator.fill(value);
+    }
 }
+
+
 
 export async function iciciFlow(page, selectedQuote) {
 
     console.log('Starting ICICI flow');
 
-    await selectedQuote
-        .getByRole('button', { name: /₹/ })
-        .click();
+    await selectedQuote.getByRole('button', { name: /₹/ }).click();
+    await test.step('KYC Details', async () => {
 
-    // ICICI-specific flow
+        // KYC dialog
+        await expect(page.getByRole('heading', {name: 'Know Your Customer (KYC)'})).toBeVisible();
+
+        // Select ID Type
+        const idTypeDropdown = page.getByRole('combobox', { name: /Id Type/ });
+        await expect(idTypeDropdown).toBeVisible();
+        await idTypeDropdown.click();
+
+        await page.getByRole('option', {name: process.env.ID_TYPE,exact: true}).click();
+
+        // Re-locate dialog AFTER ID type selection
+        const kyc = page.getByRole('dialog');
+
+        // PAN Number
+        const panNumber = kyc.getByRole('textbox', { name: 'Pan Number' });
+
+        await expect(panNumber).toBeVisible();
+        await panNumber.fill(process.env.ID_NUMBER);
+
+        // Full Name
+        const fullName = kyc.getByRole('textbox', { name: 'Full Name' });
+        await expect(fullName).toBeVisible();
+        await fullName.fill(process.env.CUSTOMER_NAME);
+
+        // Gender
+        await kyc.getByRole('combobox', { name: 'Gender Gender' }).click();
+
+        await page.getByRole('option', {name: process.env.GENDER,exact: true}).click();
+            
+        // DOB
+        const dob = kyc.getByRole('textbox', { name: 'DOB (DD/MM/YYYY)' });
+        await expect(dob).toBeVisible();
+        await dob.fill(process.env.DOB);
+
+        // Save
+        await kyc .getByRole('button', { name: 'Save' }).click();
+    });
+
+    // OVD Flow
+    await test.step('OVD Flow', async () => {
+        const aadhar = page.getByText('AadharCard *');
+
+        await expect(aadhar).toBeVisible();
+
+        const fileChooserPromise = page.waitForEvent('filechooser');
+        await aadhar.click();
+
+        const fileChooser = await fileChooserPromise;
+        await fileChooser.setFiles(process.env.AADHAR_LOCATION);
+
+        const panCard = page.getByText('PanCard *');
+
+        await expect(panCard).toBeVisible();
+
+        const panFilechooserPromise = page.waitForEvent('filechooser');
+        await panCard.click();
+
+        const panFilechooser = await panFilechooserPromise;
+        await panFilechooser.setFiles(process.env.PAN_LOCATION);
+
+
+    });
 
     console.log('ICICI flow completed');
 }
