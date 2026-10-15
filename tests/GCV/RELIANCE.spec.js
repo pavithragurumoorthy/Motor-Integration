@@ -72,6 +72,7 @@ export async function relianceFlow(page, selectedQuote) {
         await page.locator('#pan_no').fill(process.env.ID_NUMBER); //CSS locator
         await page.locator('#pan_dob').fill(process.env.KYC_DOB); //CSS Locator
         await page.getByRole('button', { name: 'Submit' }).click();
+        
 
         const fileChooserPromise = page.waitForEvent('filechooser');
 
@@ -181,21 +182,84 @@ export async function relianceFlow(page, selectedQuote) {
             }).click();
         }
 
-        await page.getByRole('checkbox', { name:'Same as Communication Address'}).check();
-        if (await titleDropdown.getAttribute('aria-label') !== process.env.TITLE) {
-            await titleDropdown.click();
+        const sameAddressLabel = page.getByText('Same as Communication Address',{ exact: true });
 
-            await page.getByRole('option', {
-                name: process.env.TITLE,
-                exact: true
-            }).click();
-        }
-        await page.getByRole('button', { name: 'Next',exact: true }).click();
-        await page.pause();
+        await sameAddressLabel.click();
+
+        // if (await titleDropdown.getAttribute('aria-label') !== process.env.TITLE) {
+        await titleDropdown.click();
+        await page.getByRole('option', {name: process.env.TITLE,exact: true}).click();
+        // }
+        const proposerSection = page.getByRole('region', {name: 'PROPOSER DETAILS'});
+
+        await proposerSection.getByRole('button', {name: 'Next',exact: true}).click();
     });
 
 
+    await test.step('Vehicle Details', async () => {
 
-    
+        const vehicleSection = page.getByRole('region', {name: 'VEHICLE DETAILS'});
+        await vehicleSection.getByRole('button', {name: 'Next',exact: true}).click();
+    });
+
+    await test.step('Nominee Details', async () => {
+
+        const NomineeSection = page.getByRole('region', {name: 'NOMINEE DETAILS'});
+        
+
+        await fillIfEmpty(page.getByRole('textbox', { name: 'Nominee Name' }),process.env.NOMINEE_NAME,'NOMINEE_NAME');
+        await fillIfEmpty(page.getByRole('textbox', { name: 'Nomine DOB (DD/MM/YYYY)' }),process.env.NOMINEE_DOB,'NOMINEE_DOB');
+        const nominee = page.getByRole('combobox', { name: /Nominee Relationship/ });
+
+        if ((await nominee.innerText()).trim() !== process.env.NOMINEE_RELATIONSHIP) {
+            await nominee.click();
+
+            await page.getByRole('option', {
+                name: process.env.NOMINEE_RELATIONSHIP,
+                exact: true
+            }).click();
+        }
+
+        await NomineeSection.getByRole('button', {name: 'Next',exact: true}).click();
+
+        await loadingText.waitFor({
+            state: 'visible',
+            timeout: 10000
+        });
+
+        // Wait until "loading..." disappears
+        await loadingText.waitFor({
+            state: 'hidden',
+            timeout: 60000
+        });
+    });
+
+    await test.step('summary', async () => {
+
+        const fileInputs = page.locator('input[type="file"]');
+
+        await fileInputs.nth(0).setInputFiles('D:/POLICY COPY.pdf'); // Previous Policy Copy
+        await fileInputs.nth(1).setInputFiles('D:/POLICY COPY.pdf'); // RC Book
+
+        const declaration1 = page.getByText('I Confirm That The Uploaded Vehicle Documents');
+        await declaration1.click();
+        const Summary = page.getByRole('region', {name: 'File Upload'});
+        await Summary.getByRole('button', {name: 'Next',exact: true}).click();
+    });
+
+    await test.step('Payment', async () => {
+
+        const declaration2 = page.getByText('I HERE BY DECLARE ALL THE DETAILS PROVIDED');
+        await declaration2.click();
+
+        await page.getByRole('button', {name: 'Pay Now',exact: true}).click();
+
+        const paymentlink = page.getURL();
+
+        console.log('Payment link:', paymentlink);
+
+
+        // await page.pause();
+    });
     console.log('RELIANCE flow completed');
 };

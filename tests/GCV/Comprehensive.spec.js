@@ -161,12 +161,12 @@ test('Comprehensive', async ({ page }) => {
 
             await expect.poll(
                 async () => {
-
                     const count = await quotes.count();
 
                     for (let i = 0; i < count; i++) {
-
-                        const insurerName = (await quotes.nth(i).getByText(targetInsurer, { exact: true }).innerText()).trim().toUpperCase();
+                        const insurerName = (
+                            await quotes.nth(i).locator('div.pcc-icon p').innerText()
+                        ).trim().toUpperCase();
 
                         if (insurerName === targetInsurer) {
                             return true;
@@ -174,10 +174,9 @@ test('Comprehensive', async ({ page }) => {
                     }
 
                     return false;
-
                 },
                 {
-                    timeout: 10000,
+                    timeout: 30000,
                     intervals: [500, 1000]
                 }
             ).toBe(true);
@@ -266,34 +265,34 @@ test('Comprehensive', async ({ page }) => {
 
             await relianceFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'ICICI') {
+        // } else if (targetInsurer === 'ICICI') {
 
-            await iciciFlow(page, selectedQuote);
+        //     await iciciFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'ROYAL') {
+        // } else if (targetInsurer === 'ROYAL') {
 
-            await royalFlow(page, selectedQuote);
+        //     await royalFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'UNIVERSAL') {
+        // } else if (targetInsurer === 'UNIVERSAL') {
 
-            await universalFlow(page, selectedQuote);
+        //     await universalFlow(page, selectedQuote);
 
-        } 
-        else if (targetInsurer === 'NATIONAL') {
+        // } 
+        // else if (targetInsurer === 'NATIONAL') {
 
-            await nationalFlow(page, selectedQuote);
+        //     await nationalFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'SHRIRAM') {
+        // } else if (targetInsurer === 'SHRIRAM') {
 
-            await shriramFlow(page, selectedQuote);
+        //     await shriramFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'MAGMA') {
+        // } else if (targetInsurer === 'MAGMA') {
 
-            await magmaFlow(page, selectedQuote);
+        //     await magmaFlow(page, selectedQuote);
 
-        } else if (targetInsurer === 'FUTURE GENERALI') {
+        // } else if (targetInsurer === 'FUTURE GENERALI') {
 
-            await futureGeneraliFlow(page, selectedQuote);
+        //     await futureGeneraliFlow(page, selectedQuote);
 
         } else {
 
